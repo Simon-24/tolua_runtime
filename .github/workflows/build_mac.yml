@@ -1,4 +1,4 @@
-name: Build Mac ToLua Bundle
+name: Build Mac ToLua Bundle (Modern Fork)
 
 on:
   workflow_dispatch:
@@ -8,34 +8,28 @@ jobs:
     runs-on: macos-latest
     
     steps:
-    - name: Checkout Code
+    # 1. 直接拉取这个完美的现代化 Fork 仓库！
+    - name: Checkout alex4814's tolua_runtime
       uses: actions/checkout@v4
       with:
+        repository: alex4814/tolua_runtime
         submodules: recursive
 
-    - name: Xcodebuild with ARM64 Overrides
+    # 2. 一键执行它提供的 Universal (通用架构) 编译脚本
+    - name: Build Universal Bundle
       run: |
-        # 1. 进入他的 Xcode 工程所在目录
-        cd macnojit
+        chmod +x build_tolua_osx_universal.sh
+        ./build_tolua_osx_universal.sh
         
-        # 2. 清理旧产物
-        xcodebuild clean
-        
-        # 3. 核心绝杀：直接用命令行参数覆盖 .pbxproj 里过时的架构配置！
-        # 强制指定双架构 (x86_64 arm64)，强制最低系统版本 10.13
-        xcodebuild -configuration=Release \
-          ARCHS="x86_64 arm64" \
-          VALID_ARCHS="x86_64 arm64" \
-          MACOSX_DEPLOYMENT_TARGET=10.13
-          
-        # 4. 灵魂验证：打印新生成的二进制文件的架构
-        echo "=== 检查新生成的二进制架构 ==="
-        lipo -info build/Release/tolua.bundle/Contents/MacOS/tolua
+    # 3. 灵魂验证：看看是不是完美的 x86_64 和 arm64 双架构
+    - name: Verify Architecture
+      run: |
+        echo "=== 检查生成的二进制架构 ==="
+        lipo -info Plugins/tolua.bundle/Contents/MacOS/tolua
 
+    # 4. 上传产物
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: tolua_mac_bundle_arm64_FINAL
-        # 5. 我们不再上传外部的 Plugins 目录了，直接深入虎穴，
-        # 把刚出炉、还热乎的 build/Release/tolua.bundle 端走！
-        path: macnojit/build/Release/tolua.bundle
+        name: tolua_mac_bundle_universal_PERFECT
+        path: Plugins/tolua.bundle
