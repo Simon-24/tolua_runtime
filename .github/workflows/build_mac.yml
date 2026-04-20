@@ -8,28 +8,26 @@ jobs:
     runs-on: macos-latest
     
     steps:
-    # 1. 直接拉取这个完美的现代化 Fork 仓库！
     - name: Checkout alex4814's tolua_runtime
       uses: actions/checkout@v4
       with:
         repository: alex4814/tolua_runtime
         submodules: recursive
 
-    # 2. 一键执行它提供的 Universal (通用架构) 编译脚本
     - name: Build Universal Bundle
       run: |
         chmod +x build_tolua_osx_universal.sh
         ./build_tolua_osx_universal.sh
         
-    # 3. 灵魂验证：看看是不是完美的 x86_64 和 arm64 双架构
     - name: Verify Architecture
       run: |
         echo "=== 检查生成的二进制架构 ==="
-        lipo -info Plugins/tolua.bundle/Contents/MacOS/tolua
+        # 【修改点】检查它新生成的专属路径！
+        lipo -info Plugins/macOS/universal/tolua.bundle/Contents/MacOS/tolua
 
-    # 4. 上传产物
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: tolua_mac_bundle_universal_PERFECT
-        path: Plugins/tolua.bundle
+        # 【修改点】上传这个新路径下热乎乎的包！
+        path: Plugins/macOS/universal/tolua.bundle
