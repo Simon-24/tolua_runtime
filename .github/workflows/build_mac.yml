@@ -1,29 +1,56 @@
 name: Build Mac ToLua Bundle
 
 on:
-  workflow_dispatch: # 允许手动点击运行
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-latest # 使用最新的 macOS 节点
+    runs-on: macos-latest
     
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v4 # 【修复1】升级到 v4，解决弃用报错
+      uses: actions/checkout@v4
 
-    - name: Modify Build Script for ARM64
+    - name: Compile Universal tolua.bundle
       run: |
-        # 【修复2】去掉了 cd mac，因为脚本就在根目录
-        sed -i '' 's/-arch x86_64/-arch x86_64 -arch arm64/g' build_osx.sh
+        # 创建输出目录
+        mkdir -p Plugins
         
-    - name: Build tolua.bundle
-      run: |
-        # 直接在根目录执行编译
-        chmod +x build_osx.sh
-        ./build_osx.sh
-        
+        # 直接使用 clang 编译，同时指定 x86_64 和 arm64，生成通用二进制文件
+        clang -O2 -bundle -undefined dynamic_lookup \
+          -arch x86_64 -arch arm64 \
+          -o Plugins/tolua.bundle \
+          -I/usr/local/include -I./macnojit/ \
+          tolua.c \
+          int64.c \
+          uint64.c \
+          pb.c \
+          lpeg.c \
+          struct.c \
+          cjson/strbuf.c \
+          cjson/lua_cjson.c \
+          cjson/fpconv.c \
+          luasocket/auxiliar.c \
+          luasocket/buffer.c \
+          luasocket/except.c \
+          luasocket/inet.c \
+          luasocket/io.c \
+          luasocket/luasocket.c \
+          luasocket/mime.c \
+          luasocket/options.c \
+          luasocket/select.c \
+          luasocket/tcp.c \
+          luasocket/timeout.c \
+          luasocket/udp.c \
+          luasocket/usocket.c \
+          macnojit/lapi.c macnojit/lcode.c macnojit/lctype.c macnojit/ldebug.c macnojit/ldo.c macnojit/ldump.c \
+          macnojit/lfunc.c macnojit/lgc.c macnojit/llex.c macnojit/lmem.c macnojit/lobject.c macnojit/lopcodes.c macnojit/lparser.c \
+          macnojit/lstate.c macnojit/lstring.c macnojit/ltable.c macnojit/ltm.c macnojit/lundump.c macnojit/lvm.c macnojit/lzio.c \
+          macnojit/lauxlib.c macnojit/lbaselib.c macnojit/lbitlib.c macnojit/lcorolib.c macnojit/ldblib.c macnojit/liolib.c \
+          macnojit/lmathlib.c macnojit/loslib.c macnojit/lstrlib.c macnojit/ltablib.c macnojit/loadlib.c macnojit/linit.c
+          
     - name: Upload Artifact
-      uses: actions/upload-artifact@v4 # 【修复1】升级到 v4，解决弃用报错
+      uses: actions/upload-artifact@v4
       with:
         name: tolua_mac_bundle_arm64
-        path: Plugins/tolua.bundle # 【修复2】修改产物路径为根目录下的 Plugins
+        path: Plugins/tolua.bundle
