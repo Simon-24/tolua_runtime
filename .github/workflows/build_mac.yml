@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-13 # 关键：强制使用 GitHub 的 Intel 架构 Mac 虚拟机
+    runs-on: macos-12 # 关键：强制使用 GitHub 的 Intel 架构 Mac 虚拟机
     
     steps:
     - name: Checkout Code
